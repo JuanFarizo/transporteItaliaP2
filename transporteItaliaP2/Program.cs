@@ -9,12 +9,11 @@ using ZXing;
 using System.Drawing;
 using System.Globalization;
 using System.Text;
-
+//TODO Hay que poner nombre del comprobante? s/referencia ( <002 o 007> Debito / <003 O 008> Credito )
 namespace transporteItaliaP2
 {
     class Program
     {
-
         // Declaracion de fuentes
         public static XFont fontCourier12 = new XFont("Courier New", 12, XFontStyle.Regular);
         public static XFont fontCourier11 = new XFont("Courier New", 11, XFontStyle.Regular);
@@ -58,6 +57,7 @@ namespace transporteItaliaP2
             try
             {
                 String fileName = pdfGeneratorTransItalia(textToParse, document);
+                //No estamos usando este tipo de nombramiento de archivos.
                 //string filename = tipoComprobante + DateTime.Now.ToString("ddMMMM")  + ".pdf";
                 string pathFolder = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "_PDFS");
                 if (!Directory.Exists(pathFolder))
@@ -67,7 +67,6 @@ namespace transporteItaliaP2
                 string fullPath = Path.Combine(pathFolder, fileName);
                 document.Save(fullPath);
                 System.Diagnostics.Process.Start(fullPath);
-                
             }
             catch (Exception e2)
             {
@@ -125,14 +124,14 @@ namespace transporteItaliaP2
             XImage img = XImage.FromFile("ItaliaP2.jpg");
             gfx.DrawImage(img, 0, 0);
 
-            //Armado de variables
+            //INICIO PARSEO DE LA PÁGINA
             String tipoComprobante = pagina.Substring(pivote, 3);
             String letra = pagina.Substring(pivote += 3, 1);
             String prefijo = pagina.Substring(pivote += 1, 4);
             String numero = pagina.Substring(pivote += 4, 8);
 
             String fecha = pagina.Substring(pivote += 8, 2) + "/" + pagina.Substring(pivote += 2, 2) + "/" + pagina.Substring(pivote += 2, 4);
-            //
+            
             String ma_cuenta = pagina.Substring(pivote += 4, 8);
             String ma_nombre = pagina.Substring(pivote += 8, 30);
             String ma_domicilio = pagina.Substring(pivote += 30, 30);
@@ -160,38 +159,25 @@ namespace transporteItaliaP2
 
             String cae = pagina.Substring(pivote += 12, 14);
             String caeVto = pagina.Substring(pivote += 14, 4) + "/" + pagina.Substring(pivote += 4, 2) + "/" + pagina.Substring(pivote += 2, 2);
+            //FIN PARSEO DE PÁGINA
 
+
+            //INICIO POSICIONAMIENTO DE DATOS EN EL PDF
             gfx.DrawString(letra, fontHelvetica35, XBrushes.Black, 285, 41);
             gfx.DrawString("Código:" + tipoComprobante, fontCourier8, XBrushes.Black, 275, 54);
 
             gfx.DrawString(letra, fontHelvetica35, XBrushes.Black, 285, 460);
             gfx.DrawString("Código:" + tipoComprobante, fontCourier8, XBrushes.Black, 275, 474);
 
+            drawNomDomLocIvaCuit(gfx, ma_nombre, ma_domicilio, ma_localidad, ma_condIva, ma_cuit, ma_cuenta);
+
             int posy = 176;
             int posySegundaHoja = 596;
-            int desdoblaCuerpo = 0;
-            int posx = -15;
+           
             foreach(string cuerpo in cuerpos)
             {
-                if(desdoblaCuerpo == 0)
-                {
-                    posx = -10;
-                }
-                if(desdoblaCuerpo == 3)
-                {
-                    posy += 79;
-                    posySegundaHoja += 79;
-                    posx = -5;
-                }
-                if(desdoblaCuerpo == 8)
-                {
-                    posy = 230;
-                    posySegundaHoja = 650;
-                    posx = 25;
-                }
-                gfx.DrawString(cuerpo, fontCourier12, XBrushes.Black, posx, posy+=11);
-                gfx.DrawString(cuerpo, fontCourier12, XBrushes.Black, posx, posySegundaHoja += 11);
-                desdoblaCuerpo++;
+                gfx.DrawString(cuerpo, fontCourier12, XBrushes.Black, 30, posy+=11);
+                gfx.DrawString(cuerpo, fontCourier12, XBrushes.Black, 30, posySegundaHoja += 11);
             }
 
             //gfx.DrawString("FACTURA", fontCourierBold14, XBrushes.Black, 433, 25);
@@ -205,15 +191,6 @@ namespace transporteItaliaP2
             gfx.DrawString(prefijo + "." + numero, fontCourierBold12, XBrushes.Black, 450, 453);
             gfx.DrawString("Fecha: ", fontCourierBold12, XBrushes.Black, 386, 468);
             gfx.DrawString(fecha, fontCourierBold12, XBrushes.Black, 450, 468);
-
-            String cuentaFileName;
-           
-            posy = 332;
-            gfx.DrawString("$", fontCourier11, XBrushes.Black, 485, posy);
-            gfx.DrawString("$", fontCourier11, XBrushes.Black, 485, posy -= 11);
-            gfx.DrawString("$", fontCourier11, XBrushes.Black, 485, posy -= 11);
-            gfx.DrawString("$", fontCourier11, XBrushes.Black, 485, posy -= 11);
-
 
             posy = 340;
             gfx.DrawString("SUB-TOTAL: ", fontCourierBold11, XBrushes.Black, 383, posy += 11);
@@ -229,12 +206,6 @@ namespace transporteItaliaP2
             total = FormateaPrecio(total);
             gfx.DrawString("$  " + total, fontCourier11, XBrushes.Black, 482, posy);
 
-            posy = 752;
-            gfx.DrawString("$", fontCourier11, XBrushes.Black, 485, posy);
-            gfx.DrawString("$", fontCourier11, XBrushes.Black, 485, posy -= 11);
-            gfx.DrawString("$", fontCourier11, XBrushes.Black, 485, posy -= 11);
-            gfx.DrawString("$", fontCourier11, XBrushes.Black, 485, posy -= 11);
-
             posy = 760;
             gfx.DrawString("SUB-TOTAL: ", fontCourierBold11, XBrushes.Black, 383, posy += 11);
             gfx.DrawString("$  " + subtotal, fontCourier11, XBrushes.Black, 482, posy);
@@ -247,7 +218,7 @@ namespace transporteItaliaP2
 
             gfx.DrawString("C.A.E.: " + cae + " Vencimiento: " + caeVto, fontCourierBold9, XBrushes.Black, 60, 392);
             gfx.DrawString("C.A.E.: " + cae + " Vencimiento: " + caeVto, fontCourierBold9, XBrushes.Black, 60, 812);
-
+            //FIN POSICIONAMIENTO DE DATOS EN PDF
             String fileName = tipoComprobante + "_" + letra + "_" + prefijo + "_" + numero + "_" + ma_cuenta + ".pdf";
             return fileName; 
         }
