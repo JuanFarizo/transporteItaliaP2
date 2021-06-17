@@ -12,9 +12,6 @@ using System.Text;
 
 namespace transporteItaliaP2
 {
-    //TODO acomodar todo con el cuerpo mal, asi se manda y asi para corregir
-    //ver para imprimir el pdf desde una libreria
-    //qr ver los margenes
     class Program
     {
 
@@ -41,7 +38,7 @@ namespace transporteItaliaP2
         /////////////////////////
         static void Main(string[] args)
         {
-            string path = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "IN_FACTU");
+            string path = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "IN_DEYCR");
             string textToParse;
             try
             {
@@ -110,7 +107,7 @@ namespace transporteItaliaP2
 
         private static String pdfGeneratorTransItalia(string pagina, PdfSharp.Pdf.PdfDocument document) 
         {
-            if (pagina.Length != 1346)
+            if (pagina.Length != 455)
             {
                 throw new IndexOutOfRangeException("El documento contiene una cantidad de caracteres inválida");
             }
@@ -120,12 +117,12 @@ namespace transporteItaliaP2
 
             // Get an XGraphics object for drawing
             XGraphics gfx = XGraphics.FromPdfPage(page);
-            if (!File.Exists("Italia.jpg"))
+            if (!File.Exists("ItaliaP2.jpg"))
             {
-                throw  new FileNotFoundException("No se encontro el archivo Italia.jpg");
+                throw  new FileNotFoundException("No se encontro el archivo ItaliaP2.jpg");
             }
             
-            XImage img = XImage.FromFile("Italia.jpg");
+            XImage img = XImage.FromFile("ItaliaP2.jpg");
             gfx.DrawImage(img, 0, 0);
 
             //Armado de variables
@@ -145,32 +142,23 @@ namespace transporteItaliaP2
             String ma_condIva = pagina.Substring(pivote += 11, 15);
 
             List<string> cuerpos = new List<string>();//Tabla Cuerpo
-            cuerpos.Add(pagina.Substring(pivote += 15, 80));
-            for (int i = 0; i < 11; i++) cuerpos.Add(pagina.Substring(pivote += 80, 80));
+            cuerpos.Add(pagina.Substring(pivote += 15, 75));
+            for (int i = 0; i < 2; i++) cuerpos.Add(pagina.Substring(pivote += 75, 75));
 
-            String subtotal = int.Parse(pagina.Substring(pivote += 80, 12)).ToString();
+            String subtotal = int.Parse(pagina.Substring(pivote += 75, 12)).ToString();
             subtotal = subtotal.Insert(subtotal.Length - 2, ".");
             String iva = int.Parse(pagina.Substring(pivote += 12, 12)).ToString();
             iva = iva.Insert(iva.Length - 2, ".");
             String ivaNoInscripto = int.Parse(pagina.Substring(pivote += 12, 12)).ToString();
-            if (ivaNoInscripto == "0") ivaNoInscripto = "";
+            if (ivaNoInscripto == "0") ivaNoInscripto = "0.00";
             else ivaNoInscripto = ivaNoInscripto.Insert(ivaNoInscripto.Length - 2, ".");
-            String exento = pagina.Substring(pivote += 12, 12);
+            String exento = int.Parse(pagina.Substring(pivote += 12, 12)).ToString();
+            if (exento == "0") exento = "0.00";
+            else exento = exento.Insert(exento.Length - 2, ".");
             String total = int.Parse(pagina.Substring(pivote += 12, 12)).ToString();
             total = total.Insert(total.Length - 2, ".");
 
-            String loDaVuelta = pagina.Substring(pivote += 12, 1);
-            
-            String re_cuenta = pagina.Substring(pivote += 1, 8);
-            String re_nombre = pagina.Substring(pivote += 8, 30);
-            String re_domicilio = pagina.Substring(pivote += 30, 30);
-            String re_localidad = pagina.Substring(pivote += 30, 30);
-
-            String re_cuit = pagina.Substring(pivote += 30, 11);
-            String re_condIva = pagina.Substring(pivote += 11, 15);
-
-            String redespacho = pagina.Substring(pivote += 15, 30);
-            String cae = pagina.Substring(pivote += 30, 14);
+            String cae = pagina.Substring(pivote += 12, 14);
             String caeVto = pagina.Substring(pivote += 14, 4) + "/" + pagina.Substring(pivote += 4, 2) + "/" + pagina.Substring(pivote += 2, 2);
 
             gfx.DrawString(letra, fontHelvetica35, XBrushes.Black, 285, 41);
@@ -219,25 +207,7 @@ namespace transporteItaliaP2
             gfx.DrawString(fecha, fontCourierBold12, XBrushes.Black, 450, 468);
 
             String cuentaFileName;
-            if (loDaVuelta == "N" || loDaVuelta == "n")
-            {
-                drawNomDomLoc(gfx, re_nombre, re_domicilio, re_localidad);
-                drawNomDomLocIvaCuit(gfx, ma_nombre, ma_domicilio, ma_localidad, ma_condIva, ma_cuit, ma_cuenta);
-                DrawQR(gfx, fecha, ma_cuit, Int32.Parse(prefijo), Int32.Parse(tipoComprobante), Int32.Parse(numero), Double.Parse(total),cae);
-                cuentaFileName = ma_cuenta;
-            }
-            else
-            {
-                drawNomDomLoc(gfx, ma_nombre, ma_domicilio, ma_localidad);
-                drawNomDomLocIvaCuit(gfx, re_nombre, re_domicilio, re_localidad, re_condIva, re_cuit, re_cuenta);
-                DrawQR(gfx, fecha, re_cuit, Int32.Parse(prefijo), Int32.Parse(tipoComprobante), Int32.Parse(numero), Double.Parse(total), cae);
-                cuentaFileName = re_cuenta;
-            }
-
-            gfx.DrawString("REDESPACHAR POR: ", fontCourierBold9, XBrushes.Black, 26, 379);
-            gfx.DrawString(redespacho, fontCourier9, XBrushes.Black, 140, 379);
-            gfx.DrawString("REDESPACHAR POR: ", fontCourierBold9, XBrushes.Black, 26, 798);
-            gfx.DrawString(redespacho, fontCourier9, XBrushes.Black, 140, 798);
+           
             posy = 332;
             gfx.DrawString("$", fontCourier11, XBrushes.Black, 485, posy);
             gfx.DrawString("$", fontCourier11, XBrushes.Black, 485, posy -= 11);
@@ -278,7 +248,7 @@ namespace transporteItaliaP2
             gfx.DrawString("C.A.E.: " + cae + " Vencimiento: " + caeVto, fontCourierBold9, XBrushes.Black, 60, 392);
             gfx.DrawString("C.A.E.: " + cae + " Vencimiento: " + caeVto, fontCourierBold9, XBrushes.Black, 60, 812);
 
-            String fileName = tipoComprobante + "_" + letra + "_" + prefijo + "_" + numero + "_" + cuentaFileName + ".pdf";
+            String fileName = tipoComprobante + "_" + letra + "_" + prefijo + "_" + numero + "_" + ma_cuenta + ".pdf";
             return fileName; 
         }
 

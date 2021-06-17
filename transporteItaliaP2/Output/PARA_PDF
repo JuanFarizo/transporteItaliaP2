@@ -1,20 +1,20 @@
 --- Para confeccionar Notas de Debito y/o creditos ----
 -------------------------------------------------------
-TIPOCOMP       999        ( <002 o 007> Debito / <003 O 008> Credito )
-LETRA          X          ( <A / B> )                 2
+TIPOCOMP       999  num long (3)      ( <002 o 007> Debito / <003 O 008> Credito )
+LETRA          X      (es una letra)    ( <A / B> )                 2
 PREFIJO        9999                                   3
 NUMERO         99999999                               4
 FECHA          99999999
 CUENTA         99999999                               5
-NOMBRE         X(30)
+NOMBRE         X(30) equivalente a 30 "x"
 DOMICILIO      X(30)
 LOCALIDAD      X(30)
-CUIT           99999999999
+CUIT           99999999999 11 enteros serian
 CONDICION IVA  X(15)
 RENGLON1       X(75)
 RENGLON2       X(75)
 RENGLON3       X(75)
-SUB-TOTAL      9(10)V99
+SUB-TOTAL      9(10)V99  (son )
 IVA 21         9(10)V99
 IVA NO INSCR.  9(10)V99
 EXENTO         9(10)V99
@@ -23,7 +23,7 @@ CAE            9(14)
 VTOCAE         9(8)
 
 Dejo archivo    : IN_DEYCR
-Dejar           : 111_2_3333_44444444_55555555.PDF
+Dejar           : 111_2_3333_44444444_55555555.PDF nombre del archivo tipocomprobante_letra_prefijo_numero_cuenta.PDF
 
 -------------------------------------------------------
 --------- Para confeccionar facturas manuales ---------
@@ -39,7 +39,7 @@ DOMICILIO        X(30)
 LOCALIDAD        X(30)
 CUIT             99999999999
 CONDICION IVA    X(15)
-12 RENGLONES DE DESCRIPCION DE (75)
+12 RENGLONES DE DESCRIPCION DE (75) (cuerpo de 12 lineas)
 SUB-TOTAL        9(10)V99.
 IVA              9(10)V99.
 IVA NO INSCRIPTO 9(10)V99.
