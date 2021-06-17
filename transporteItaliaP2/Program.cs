@@ -10,6 +10,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Text;
 //TODO Hay que poner nombre del comprobante? s/referencia ( <002 o 007> Debito / <003 O 008> Credito )
+//TODO REFORMAR LA PLANTILLA EN LA PARTE DEL CAE Y VTOCAE
 namespace transporteItaliaP2
 {
     class Program
@@ -163,6 +164,15 @@ namespace transporteItaliaP2
 
 
             //INICIO POSICIONAMIENTO DE DATOS EN EL PDF
+
+            //referencia( < 002 o 007 > Debito / < 003 O 008 > Credito)
+            //SI ES 002 DEBITO A, SI ES 007 DEBITO B, SI ES 003 CREDITO A, SI ES 008 CREADITO B
+            string nombreComprobate = "";
+            if (tipoComprobante == "002") { nombreComprobate = "N. Débito"; letra = "A"; }
+            else if (tipoComprobante == "007") { nombreComprobate = "N. Débito"; letra = "B"; }
+            else if (tipoComprobante == "003") { nombreComprobate = "N. Crédito"; letra = "A"; }
+            else if (tipoComprobante == "008") { nombreComprobate = "N. Crédito"; letra = "B"; }
+
             gfx.DrawString(letra, fontHelvetica35, XBrushes.Black, 285, 41);
             gfx.DrawString("Código:" + tipoComprobante, fontCourier8, XBrushes.Black, 275, 54);
 
@@ -170,51 +180,54 @@ namespace transporteItaliaP2
             gfx.DrawString("Código:" + tipoComprobante, fontCourier8, XBrushes.Black, 275, 474);
 
             drawNomDomLocIvaCuit(gfx, ma_nombre, ma_domicilio, ma_localidad, ma_condIva, ma_cuit, ma_cuenta);
+            DrawQR(gfx, fecha, ma_cuit, Int32.Parse(prefijo), Int32.Parse(tipoComprobante), Int32.Parse(numero), Double.Parse(total), cae);
 
             int posy = 176;
             int posySegundaHoja = 596;
-           
-            foreach(string cuerpo in cuerpos)
+
+            foreach (string cuerpo in cuerpos)
             {
-                gfx.DrawString(cuerpo, fontCourier12, XBrushes.Black, 30, posy+=11);
-                gfx.DrawString(cuerpo, fontCourier12, XBrushes.Black, 30, posySegundaHoja += 11);
+                gfx.DrawString(cuerpo, fontCourier12, XBrushes.Black, 28, posy+=11);
+                gfx.DrawString(cuerpo, fontCourier12, XBrushes.Black, 28, posySegundaHoja += 11);
             }
 
-            //gfx.DrawString("FACTURA", fontCourierBold14, XBrushes.Black, 433, 25);
-            gfx.DrawString("Factura: ", fontCourierBold12, XBrushes.Black, 386, 36);
-            gfx.DrawString(prefijo + "." + numero, fontCourierBold12, XBrushes.Black, 450, 36);
-            gfx.DrawString("Fecha: ", fontCourierBold12, XBrushes.Black, 386, 51);
-            gfx.DrawString(fecha, fontCourierBold12, XBrushes.Black, 450, 51);
+            
 
-            //gfx.DrawString("FACTURA", fontCourierBold14, XBrushes.Black, 433, 442);
-            gfx.DrawString("Factura: ", fontCourierBold12, XBrushes.Black, 386, 453);
+            //gfx.DrawString(nombreComprobate, fontCourierBold14, XBrushes.Black, 433, 25);
+            gfx.DrawString(nombreComprobate + ": ", fontCourierBold12, XBrushes.Black, 366, 36);
+            gfx.DrawString(prefijo + "." + numero, fontCourierBold12, XBrushes.Black, 450, 36);
+            gfx.DrawString("Fecha: ", fontCourierBold12, XBrushes.Black, 366, 51);
+            gfx.DrawString(fecha, fontCourierBold12, XBrushes.Black, 472, 51);
+
+            //gfx.DrawString(nombreComprobate, fontCourierBold14, XBrushes.Black, 433, 442);
+            gfx.DrawString(nombreComprobate + ": ", fontCourierBold12, XBrushes.Black, 366, 453);
             gfx.DrawString(prefijo + "." + numero, fontCourierBold12, XBrushes.Black, 450, 453);
-            gfx.DrawString("Fecha: ", fontCourierBold12, XBrushes.Black, 386, 468);
-            gfx.DrawString(fecha, fontCourierBold12, XBrushes.Black, 450, 468);
+            gfx.DrawString("Fecha: ", fontCourierBold12, XBrushes.Black, 366, 468);
+            gfx.DrawString(fecha, fontCourierBold12, XBrushes.Black, 472, 468);
 
             posy = 340;
-            gfx.DrawString("SUB-TOTAL: ", fontCourierBold11, XBrushes.Black, 383, posy += 11);
+            gfx.DrawString("SUB-TOTAL: ", fontCourierBold11, XBrushes.Black, 375, posy += 11);
             subtotal = FormateaPrecio(subtotal);
-            gfx.DrawString("$  " + subtotal, fontCourier11, XBrushes.Black, 482, posy);
-            gfx.DrawString("IVA 21%: ", fontCourier11, XBrushes.Black, 383, posy += 11);
+            gfx.DrawString("$  " + subtotal, fontCourier11, XBrushes.Black, 495, posy);
+            gfx.DrawString("IVA 21%: ", fontCourier11, XBrushes.Black, 375, posy += 11);
             iva = FormateaPrecio(iva);
-            gfx.DrawString("$  " + iva, fontCourier11, XBrushes.Black, 482, posy);
-            gfx.DrawString("IVA NO I.: ", fontCourier11, XBrushes.Black, 383, posy += 11);
-            //ivaNoInscripto = FormateaPrecio(ivaNoInscripto);
-            gfx.DrawString("$  " + ivaNoInscripto, fontCourier11, XBrushes.Black, 482, posy);
-            gfx.DrawString("TOTAL $: ", fontCourierBold11, XBrushes.Black, 383, posy += 11);
+            gfx.DrawString("$  " + iva, fontCourier11, XBrushes.Black, 495, posy);
+            gfx.DrawString("IVA NO I.: ", fontCourier11, XBrushes.Black, 375, posy += 11);
+            ivaNoInscripto = FormateaPrecio(ivaNoInscripto);
+            gfx.DrawString("$  " + ivaNoInscripto, fontCourier11, XBrushes.Black, 495, posy);
+            gfx.DrawString("TOTAL $: ", fontCourierBold11, XBrushes.Black, 375, posy += 11);
             total = FormateaPrecio(total);
-            gfx.DrawString("$  " + total, fontCourier11, XBrushes.Black, 482, posy);
+            gfx.DrawString("$  " + total, fontCourier11, XBrushes.Black, 495, posy);
 
             posy = 760;
-            gfx.DrawString("SUB-TOTAL: ", fontCourierBold11, XBrushes.Black, 383, posy += 11);
-            gfx.DrawString("$  " + subtotal, fontCourier11, XBrushes.Black, 482, posy);
-            gfx.DrawString("IVA 21%: ", fontCourier11, XBrushes.Black, 383, posy += 11);
-            gfx.DrawString("$  " + iva, fontCourier11, XBrushes.Black, 482, posy);
-            gfx.DrawString("IVA NO I.: ", fontCourier11, XBrushes.Black, 383, posy += 11);
-            gfx.DrawString("$  " + ivaNoInscripto, fontCourier11, XBrushes.Black, 482, posy);
-            gfx.DrawString("TOTAL: ", fontCourierBold11, XBrushes.Black, 383, posy += 11);
-            gfx.DrawString("$  " + total, fontCourier11, XBrushes.Black, 482, posy);
+            gfx.DrawString("SUB-TOTAL: ", fontCourierBold11, XBrushes.Black, 375, posy += 11);
+            gfx.DrawString("$  " + subtotal, fontCourier11, XBrushes.Black, 495, posy);
+            gfx.DrawString("IVA 21%: ", fontCourier11, XBrushes.Black, 375, posy += 11);
+            gfx.DrawString("$  " + iva, fontCourier11, XBrushes.Black, 495, posy);
+            gfx.DrawString("IVA NO I.: ", fontCourier11, XBrushes.Black, 375, posy += 11);
+            gfx.DrawString("$  " + ivaNoInscripto, fontCourier11, XBrushes.Black, 495, posy);
+            gfx.DrawString("TOTAL: ", fontCourierBold11, XBrushes.Black, 375, posy += 11);
+            gfx.DrawString("$  " + total, fontCourier11, XBrushes.Black, 495, posy);
 
             gfx.DrawString("C.A.E.: " + cae + " Vencimiento: " + caeVto, fontCourierBold9, XBrushes.Black, 60, 392);
             gfx.DrawString("C.A.E.: " + cae + " Vencimiento: " + caeVto, fontCourierBold9, XBrushes.Black, 60, 812);
